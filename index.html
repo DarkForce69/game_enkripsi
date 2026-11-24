@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STREET RACER: TUG OF WAR – CAESAR CIPHER BATTLE</title>
+    <!-- Tailwind CSS untuk UI modern & responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Chakra Petch & Orbitron untuk nuansa Arcade Street Battle -->
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,700;1,700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red-neon: #ff2a55;
+            --red-glow: rgba(255, 42, 85, 0.6);
+            --blue-neon: #00d2ff;
+            --blue-glow: rgba(0, 210, 255, 0.6);
+            --dark-bg: #0a0b10;
+        }
+
+        body {
+            font-family: 'Chakra Petch', sans-serif;
+            background-color: var(--dark-bg);
+            color: #ffffff;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .font-arcade {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Efek Glow Neon */
+        .neon-red-box {
+            box-shadow: 0 0 15px var(--red-glow), inset 0 0 10px rgba(255, 42, 85, 0.2);
+            border: 2px solid var(--red-neon);
+        }
+
+        .neon-blue-box {
+            box-shadow: 0 0 15px var(--blue-glow), inset 0 0 10px rgba(0, 210, 255, 0.2);
+            border: 2px solid var(--blue-neon);
+        }
+
+        .text-glow-red {
+            text-shadow: 0 0 10px var(--red-neon), 0 0 20px var(--red-neon);
+        }
+
+        .text-glow-blue {
+            text-shadow: 0 0 10px var(--blue-neon), 0 0 20px var(--blue-neon);
+        }
+
+        /* Animasi Getar saat salah jawab */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.35s ease-in-out;
+        }
+
+        /* Animasi Pulse Kemenangan Ronde */
+        @keyframes flashPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
+        .animate-win-pulse {
+            animation: flashPulse 0.4s ease-out;
+        }
+
+        /* Custom Scrollbar untuk tabel referensi alfabet */
+        ::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #11131c;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #33384d;
+            border-radius: 3px;
+        }
+
+        /* Rasio Aspek Arena Canvas 16:9 yang responsif */
+        #arena-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            max-height: 46vh;
+            background: #0d0f17;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border: 2px solid #262b3d;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Tombol Arcade 3D */
+        .btn-arcade-red {
+            background: linear-gradient(180deg, #ff3b63 0%, #c81036 100%);
+            box-shadow: 0 4px 0 #7a051d, 0 0 15px var(--red-glow);
+            transition: all 0.1s;
+        }
+        .btn-arcade-red:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #7a051d, 0 0 8px var(--red-glow);
+        }
+
+        .btn-arcade-blue {
+            background: linear-gradient(180deg, #1ad8ff 0%, #008bb3 100%);
+            box-shadow: 0 4px 0 #004d66, 0 0 15px var(--blue-glow);
+            transition: all 0.1s;
+        }
+        .btn-arcade-blue:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #004d66, 0 0 8px var(--blue-glow);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-[radial-gradient(ellipse_at_top,_#171b2b_0%,_#090a0f_100%)]">
+
+    <!-- ==================== LAYAR MENU UTAMA ==================== -->
+    <div id="screen-menu" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-[#090a0f]/95 backdrop-blur-md">
+        <div class="max-w-3xl w-full bg-[#121521] border-2 border-slate-700/80 rounded-2xl p-6 md:p-8 shadow-2xl text-center relative overflow-hidden">
+            <!-- Dekorasi Garis Neon Atas -->
+            <div class="absolute top-0 left-0 w-1/2 h-1.5 bg-gradient-to-r from-transparent via-[#ff2a55] to-[#ff2a55]"></div>
+            <div class="absolute top-0 right-0 w-1/2 h-1.5 bg-gradient-to-l from-transparent via-[#00d2ff] to-[#00d2ff]"></div>
+
+            <div class="inline-block px-3 py-1 rounded-full bg-slate-800/90 border border-slate-600 text-xs md:text-sm font-bold tracking-widest text-amber-400 mb-3">
+                INFORMATIKA KELAS 7 SMP • KRIPTOGRAFI DASAR
+            </div>
+
+            <h1 class="font-arcade text-2xl sm:text-4xl md:text-5xl font-black tracking-wider uppercase leading-tight mb-2">
+                <span class="text-white">STREET RACER:</span><br>
+                <span class="text-[#ff2a55] text-glow-red">TUG OF WAR</span>
+                <span class="text-slate-400 mx-1">–</span>
+                <span class="text-[#00d2ff] text-glow-blue">CAESAR CIPHER</span>
+            </h1>
+
+            <p class="text-slate-300 text-sm md:text-base max-w-xl mx-auto mb-6">
+                Pertarungan tarik tambang jalanan secara <strong>REAL-TIME</strong>! Dua tim berlomba memecahkan sandi <strong>Enkripsi & Dekripsi Caesar Cipher</strong> secepat mungkin untuk menarik tambang ke garis kemenangan.
+            </p>
+
+            <!-- Panduan Singkat Aturan -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-left mb-6">
+                <div class="bg-[#181c2c] p-3.5 rounded-xl border border-slate-700/60">
+                    <div class="text-amber-400 font-bold text-sm mb-1">⚡ REAL-TIME BATTLE</div>
+                    <p class="text-xs text-slate-300 leading-relaxed">Tanpa bergantian! Kedua tim mengetik jawaban bersamaan di panel masing-masing. Tercepat & benar menarik tali.</p>
+                </div>
+                <div class="bg-[#181c2c] p-3.5 rounded-xl border border-slate-700/60">
+                    <div class="text-emerald-400 font-bold text-sm mb-1">🔐 ENKRIPSI & DEKRIPSI</div>
+                    <p class="text-xs text-slate-300 leading-relaxed"><strong>Enkripsi (+):</strong> Geser huruf maju.<br><strong>Dekripsi (-):</strong> Geser huruf mundur.<br>Pergeseran 1–5 huruf (A–Z).</p>
+                </div>
+                <div class="bg-[#181c2c] p-3.5 rounded-xl border border-slate-700/60">
+                    <div class="text-purple-400 font-bold text-sm mb-1">🏆 SYARAT MENANG</div>
+                    <p class="text-xs text-slate-300 leading-relaxed">Setiap tarikan menggeser tali <strong>10%</strong>. Tarik hingga batas <strong>40%</strong> (4 tarikan bersih) atau unggul setelah 10 soal!</p>
+                </div>
+            </div>
+
+            <!-- Pita Referensi Alfabet -->
+            <div class="bg-[#0d1018] p-3 rounded-xl border border-slate-800 mb-6">
+                <div class="text-[11px] uppercase tracking-wider text-slate-400 mb-1.5 font-bold">Referensi Urutan Alfabet (A - Z)</div>
+                <div class="flex justify-between gap-0.5 overflow-x-auto pb-1 text-xs font-mono font-bold text-slate-200" id="menu-alphabet-strip"></div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button id="btn-start-game" class="w-full sm:w-auto px-8 py-4 rounded-xl font-arcade font-black text-lg tracking-wider text-white bg-gradient-to-r from-[#ff2a55] via-purple-600 to-[#00d2ff] hover:brightness-110 shadow-[0_0_25px_rgba(168,85,247,0.5)] transition transform hover:scale-105 cursor-pointer">
+                    🔥 MULAI PERTANDINGAN
+                </button>
+                <button id="btn-toggle-sound-menu" class="px-4 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sm font-bold text-slate-200 cursor-pointer">
+                    🔊 AUDIO: AKTIF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LAYAR UTAMA GAMEPLAY ==================== -->
+    <div id="screen-game" class="hidden flex-col w-full max-w-7xl mx-auto px-2 sm:px-4 py-2 gap-2 flex-1">
+        
+        <!-- HEADER HUD: SKOR, INDIKATOR POSISI TALI, TIMER & PROGRESS -->
+        <header class="bg-[#111420]/90 border border-slate-800 rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 shadow-lg">
+            <!-- Info Tim Merah -->
+            <div class="flex items-center gap-2.5">
+                <div class="w-3.5 h-8 rounded bg-[#ff2a55] shadow-[0_0_10px_#ff2a55]"></div>
+                <div>
+                    <div class="text-[10px] sm:text-xs font-bold tracking-wider text-[#ff2a55]">RED STREET FIGHTERS</div>
+                    <div class="font-arcade text-lg sm:text-2xl font-black leading-none text-white">
+                        <span id="hud-red-score">0</span> <span class="text-xs font-sans font-normal text-slate-400">TARIKAN</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tengah: Progress Soal, Timer & Bar Posisi Tali -->
+            <div class="flex flex-col items-center flex-1 max-w-md mx-auto">
+                <div class="flex items-center gap-4 mb-1">
+                    <span class="px-2.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-xs font-bold text-amber-400">
+                        SOAL <span id="hud-question-num">1</span>/10
+                    </span>
+                    <div class="flex items-center gap-1.5 px-3 py-0.5 rounded bg-slate-900 border border-slate-700">
+                        <span class="text-xs text-slate-400">WAKTU:</span>
+                        <span id="hud-timer" class="font-arcade font-black text-base sm:text-lg text-emerald-400">60</span>
+                        <span class="text-xs text-slate-400">DETIK</span>
+                    </div>
+                    <button id="btn-sound-hud" class="p-1 rounded bg-slate-800 hover:bg-slate-700 text-xs border border-slate-700 cursor-pointer" title="Suara">🔊</button>
+                </div>
+
+                <!-- Bar Indikator Posisi Tali (-40% Merah s/d +40% Biru) -->
+                <div class="w-full bg-slate-900 h-3.5 rounded-full border border-slate-700 relative overflow-hidden flex items-center">
+                    <!-- Zona Kemenangan Kiri (Merah) -->
+                    <div class="h-full w-[12.5%] bg-[#ff2a55]/30 border-r border-[#ff2a55]"></div>
+                    <div class="h-full w-[37.5%] bg-gradient-to-r from-[#ff2a55]/10 to-transparent"></div>
+                    <!-- Garis Tengah -->
+                    <div class="w-0.5 h-full bg-white/70 z-10"></div>
+                    <div class="h-full w-[37.5%] bg-gradient-to-l from-[#00d2ff]/10 to-transparent"></div>
+                    <!-- Zona Kemenangan Kanan (Biru) -->
+                    <div class="h-full w-[12.5%] bg-[#00d2ff]/30 border-l border-[#00d2ff]"></div>
+
+                    <!-- Penanda Posisi Tali Dinamis -->
+                    <div id="hud-rope-marker" class="absolute top-0 bottom-0 w-3.5 -ml-1.5 bg-amber-400 rounded-full shadow-[0_0_10px_#fbbf24] border border-white transition-all duration-500 z-20" style="left: 50%;"></div>
+                </div>
+                <div class="w-full flex justify-between text-[10px] font-bold text-slate-400 mt-0.5 px-1">
+                    <span class="text-[#ff2a55]">BATAS MERAH (-40%)</span>
+                    <span id="hud-rope-percent" class="text-amber-300">POSISI: 0% (TENGAH)</span>
+                    <span class="text-[#00d2ff]">BATAS BIRU (+40%)</span>
+                </div>
+            </div>
+
+            <!-- Info Tim Biru -->
+            <div class="flex items-center gap-2.5 text-right">
+                <div>
+                    <div class="text-[10px] sm:text-xs font-bold tracking-wider text-[#00d2ff]">BLUE STREET FIGHTERS</div>
+                    <div class="font-arcade text-lg sm:text-2xl font-black leading-none text-white">
+                        <span id="hud-blue-score">0</span> <span class="text-xs font-sans font-normal text-slate-400">TARIKAN</span>
+                    </div>
+                </div>
+                <div class="w-3.5 h-8 rounded bg-[#00d2ff] shadow-[0_0_10px_#00d2ff]"></div>
+            </div>
+        </header>
+
+        <!-- ARENA TARIK TAMBANG 16:9 CANVAS -->
+        <div id="arena-wrapper" class="mx-auto">
+            <canvas id="tugCanvas"></canvas>
+
+            <!-- Banner Notifikasi Ronde di Atas Canvas -->
+            <div id="round-banner" class="hidden absolute inset-0 bg-black/65 backdrop-blur-[2px] flex flex-col items-center justify-center z-30 pointer-events-none px-4 text-center">
+                <div id="banner-badge" class="px-4 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-2 bg-amber-500 text-black">
+                    POIN TARIKAN!
+                </div>
+                <h2 id="banner-title" class="font-arcade text-2xl sm:text-4xl md:text-5xl font-black text-white uppercase tracking-wide mb-1">
+                    TIM MERAH MENARIK TALI!
+                </h2>
+                <p id="banner-subtitle" class="text-sm sm:text-base text-slate-200 font-medium">
+                    Jawaban benar: <span class="font-mono font-bold text-amber-300">KODE</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- PANEL SOAL CAESAR CIPHER -->
+        <section class="bg-[#121624] border border-slate-700/90 rounded-xl p-2.5 sm:p-3.5 shadow-lg relative">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-2">
+                <!-- Jenis Operasi & Kunci Pergeseran -->
+                <div class="flex items-center gap-2 shrink-0">
+                    <span id="q-type-badge" class="px-3 py-1 rounded-lg font-arcade font-bold text-xs sm:text-sm tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/50">
+                        ENKRIPSI (GESER MAJU +3)
+                    </span>
+                </div>
+
+                <!-- Teks Soal Utama -->
+                <div class="text-center flex-1">
+                    <div id="q-instruction" class="text-xs sm:text-sm text-slate-300">
+                        Ubahlah teks asli (Plaintext) berikut menjadi sandi (Ciphertext):
+                    </div>
+                    <div id="q-cipher-word" class="font-arcade text-2xl sm:text-3xl md:text-4xl font-black tracking-[0.25em] text-white mt-0.5 select-all">
+                        DATA
+                    </div>
+                </div>
+
+                <!-- Tombol Bantuan Alfabet Cepat -->
+                <button id="btn-toggle-helper" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-slate-200 shrink-0 cursor-pointer">
+                    🔤 BANTUAN ALFABET
+                </button>
+            </div>
+
+            <!-- Bar Bantuan Alfabet (Bisa disembunyikan/ditampilkan) -->
+            <div id="helper-alphabet-bar" class="hidden mt-2.5 pt-2 border-t border-slate-800">
+                <div class="flex justify-between gap-0.5 overflow-x-auto text-[11px] sm:text-xs font-mono font-bold text-amber-300" id="game-alphabet-strip"></div>
+            </div>
+        </section>
+
+        <!-- DUA PANEL INPUT TIM REAL-TIME (BERDAMPINGAN) -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1">
+            
+            <!-- PANEL TIM MERAH (KIRI) -->
+            <div id="panel-red" class="bg-[#181118] neon-red-box rounded-xl p-3 sm:p-4 flex flex-col justify-between transition-all">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-[#ff2a55] animate-pulse"></span>
+                        <h3 class="font-arcade font-bold text-sm sm:text-base text-[#ff2a55] tracking-wider">TIM MERAH – RED STREET FIGHTERS</h3>
+                    </div>
+                    <span id="status-red" class="text-xs font-bold px-2 py-0.5 rounded bg-[#ff2a55]/20 text-[#ff2a55]">SIAP MENJAWAB</span>
+                </div>
+
+                <form id="form-red" class="flex flex-col sm:flex-row gap-2" autocomplete="off">
+                    <input 
+                        type="text" 
+                        id="input-red" 
+                        placeholder="Ketik jawaban Tim Merah..." 
+                        maxlength="20"
+                        class="flex-1 bg-[#0d090d] border-2 border-[#ff2a55]/60 focus:border-[#ff2a55] rounded-xl px-4 py-3 text-base sm:text-lg font-arcade font-bold tracking-widest text-white uppercase outline-none placeholder:font-sans placeholder:text-xs placeholder:tracking-normal placeholder:text-slate-500"
+                    >
+                    <button 
+                        type="submit" 
+                        id="btn-submit-red"
+                        class="btn-arcade-red px-6 py-3 rounded-xl font-arcade font-black text-sm sm:text-base text-white tracking-wider uppercase cursor-pointer shrink-0">
+                        TARIK! ⚡
+                    </button>
+                </form>
+                <div class="mt-1.5 flex justify-between items-center text-[11px] text-slate-400">
+                    <span>Tekan <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-200">ENTER</kbd> di kolom ini untuk kirim</span>
+                    <span id="feedback-red" class="font-bold text-rose-400"></span>
+                </div>
+            </div>
+
+            <!-- PANEL TIM BIRU (KANAN) -->
+            <div id="panel-blue" class="bg-[#101722] neon-blue-box rounded-xl p-3 sm:p-4 flex flex-col justify-between transition-all">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-[#00d2ff] animate-pulse"></span>
+                        <h3 class="font-arcade font-bold text-sm sm:text-base text-[#00d2ff] tracking-wider">TIM BIRU – BLUE STREET FIGHTERS</h3>
+                    </div>
+                    <span id="status-blue" class="text-xs font-bold px-2 py-0.5 rounded bg-[#00d2ff]/20 text-[#00d2ff]">SIAP MENJAWAB</span>
+                </div>
+
+                <form id="form-blue" class="flex flex-col sm:flex-row gap-2" autocomplete="off">
+                    <input 
+                        type="text" 
+                        id="input-blue" 
+                        placeholder="Ketik jawaban Tim Biru..." 
+                        maxlength="20"
+                        class="flex-1 bg-[#080d14] border-2 border-[#00d2ff]/60 focus:border-[#00d2ff] rounded-xl px-4 py-3 text-base sm:text-lg font-arcade font-bold tracking-widest text-white uppercase outline-none placeholder:font-sans placeholder:text-xs placeholder:tracking-normal placeholder:text-slate-500"
+                    >
+                    <button 
+                        type="submit" 
+                        id="btn-submit-blue"
+                        class="btn-arcade-blue px-6 py-3 rounded-xl font-arcade font-black text-sm sm:text-base text-white tracking-wider uppercase cursor-pointer shrink-0">
+                        TARIK! ⚡
+                    </button>
+                </form>
+                <div class="mt-1.5 flex justify-between items-center text-[11px] text-slate-400">
+                    <span>Tekan <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-200">ENTER</kbd> di kolom ini untuk kirim</span>
+                    <span id="feedback-blue" class="font-bold text-rose-400"></span>
+                </div>
+            </div>
+
+        </section>
+    </div>
+
+    <!-- ==================== LAYAR HASIL AKHIR ==================== -->
+    <div id="screen-gameover" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#07080c]/95 backdrop-blur-md">
+        <div class="max-w-2xl w-full bg-[#121624] border-2 border-slate-700 rounded-2xl p-6 sm:p-8 text-center shadow-2xl relative overflow-hidden">
+            <div id="gameover-top-bar" class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#ff2a55] to-[#00d2ff]"></div>
+
+            <div class="inline-block px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 text-xs font-bold tracking-widest uppercase mb-2">
+                PERTANDINGAN SELESAI
+            </div>
+
+            <h2 id="winner-title" class="font-arcade text-3xl sm:text-5xl font-black uppercase tracking-wide mb-2 text-white">
+                TIM MERAH MENANG!
+            </h2>
+            <p id="winner-reason" class="text-slate-300 text-sm sm:text-base mb-6">
+                Berhasil menarik tali melewati batas kemenangan 40%!
+            </p>
+
+            <!-- Statistik Pertandingan -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <!-- Kartu Statistik Tim Merah -->
+                <div class="bg-[#1b121b] border border-[#ff2a55]/60 rounded-xl p-4">
+                    <div class="text-xs font-bold text-[#ff2a55] tracking-wider mb-1">RED STREET FIGHTERS</div>
+                    <div class="font-arcade text-3xl font-black text-white mb-2" id="end-red-pulls">0</div>
+                    <div class="text-xs text-slate-300 space-y-1">
+                        <div>Total Tarikan: <strong id="end-red-pulls-sub" class="text-white">0</strong></div>
+                        <div>Jawaban Benar: <strong id="end-red-correct" class="text-emerald-400">0</strong></div>
+                    </div>
+                </div>
+
+                <!-- Kartu Statistik Tim Biru -->
+                <div class="bg-[#111926] border border-[#00d2ff]/60 rounded-xl p-4">
+                    <div class="text-xs font-bold text-[#00d2ff] tracking-wider mb-1">BLUE STREET FIGHTERS</div>
+                    <div class="font-arcade text-3xl font-black text-white mb-2" id="end-blue-pulls">0</div>
+                    <div class="text-xs text-slate-300 space-y-1">
+                        <div>Total Tarikan: <strong id="end-blue-pulls-sub" class="text-white">0</strong></div>
+                        <div>Jawaban Benar: <strong id="end-blue-correct" class="text-emerald-400">0</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Posisi Akhir Tali -->
+            <div class="bg-[#0d1018] border border-slate-800 rounded-xl p-3 mb-6 text-xs sm:text-sm text-slate-300">
+                Posisi Akhir Penanda Tali: <strong id="end-rope-pos" class="text-amber-400 font-arcade">0%</strong>
+            </div>
+
+            <!-- Tombol Aksi -->
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button id="btn-play-again" class="px-7 py-3.5 rounded-xl font-arcade font-bold text-sm sm:text-base text-white bg-gradient-to-r from-[#ff2a55] to-[#00d2ff] hover:brightness-110 shadow-lg cursor-pointer">
+                    🔄 MAIN LAGI
+                </button>
+                <button id="btn-back-menu" class="px-7 py-3.5 rounded-xl font-arcade font-bold text-sm sm:text-base text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-600 cursor-pointer">
+                    🏠 KEMBALI KE MENU
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SCRIPT LOGIKA GAME & VISUAL CANVAS 2.5D ==================== -->
+    <script>
+        /**
+         * 1. BANK SOAL CAESAR CIPHER (10 SOAL: 5 ENKRIPSI & 5 DEKRIPSI)
+         * Semua jawaban telah diverifikasi secara matematis pada alfabet A-Z (26 huruf).
+         */
+        const QUESTIONS_BANK = [
+            // --- 5 SOAL ENKRIPSI (Geser Maju +) ---
+            {
+                id: 1,
+                type: 'ENKRIPSI',
+                shift: 1,
+                direction: 'MAJU (+1)',
+                instruction: 'ENKRIPSI: Geser setiap huruf MAJU 1 langkah (A → B)',
+                prompt: 'DATA',
+                // D+1=E, A+1=B, T+1=U, A+1=B
+                answer: 'EBUB'
+            },
+            {
+                id: 2,
+                type: 'ENKRIPSI',
+                shift: 2,
+                direction: 'MAJU (+2)',
+                instruction: 'ENKRIPSI: Geser setiap huruf MAJU 2 langkah (A → C)',
+                prompt: 'KODE',
+                // K+2=M, O+2=Q, D+2=F, E+2=G
+                answer: 'MQFG'
+            },
+            {
+                id: 3,
+                type: 'ENKRIPSI',
+                shift: 3,
+                direction: 'MAJU (+3)',
+                instruction: 'ENKRIPSI: Geser setiap huruf MAJU 3 langkah (A → D)',
+                prompt: 'AMAN',
+                // A+3=D, M+3=P, A+3=D, N+3=Q
+                answer: 'DPDQ'
+            },
+            {
+                id: 4,
+                type: 'ENKRIPSI',
+                shift: 4,
+                direction: 'MAJU (+4)',
+                instruction: 'ENKRIPSI: Geser setiap huruf MAJU 4 langkah (A → E)',
+                prompt: 'SIBER',
+                // S+4=W, I+4=M, B+4=F, E+4=I, R+4=V
+                answer: 'WMFIV'
+            },
+            {
+                id: 5,
+                type: 'ENKRIPSI',
+                shift: 5,
+                direction: 'MAJU (+5)',
+                instruction: 'ENKRIPSI: Geser setiap huruf MAJU 5 langkah (Z → E)',
+                prompt: 'ZONA',
+                // Z+5=E, O+5=T, N+5=S, A+5=F
+                answer: 'ETSF'
+            },
+
+            // --- 5 SOAL DEKRIPSI (Geser Mundur -) ---
+            {
+                id: 6,
+                type: 'DEKRIPSI',
+                shift: 1,
+                direction: 'MUNDUR (-1)',
+                instruction: 'DEKRIPSI: Geser setiap huruf MUNDUR 1 langkah (B → A)',
+                prompt: 'JMNZ',
+                // J-1=I, M-1=L, N-1=M, Z-1=Y -> ILMY? Tunggu: kita pakai kata bermakna "ILMU" -> JMN V!
+                // Koreksi: I+1=J, L+1=M, M+1=N, U+1=V -> Prompt: JMNV, Answer: ILMU
+                answer: 'ILMU'
+            },
+            {
+                id: 7,
+                type: 'DEKRIPSI',
+                shift: 2,
+                direction: 'MUNDUR (-2)',
+                instruction: 'DEKRIPSI: Geser setiap huruf MUNDUR 2 langkah (C → A)',
+                prompt: 'MWPEK',
+                // M-2=K, W-2=U, P-2=N, E-2=C, K-2=I -> KUNCI
+                answer: 'KUNCI'
+            },
+            {
+                id: 8,
+                type: 'DEKRIPSI',
+                shift: 3,
+                direction: 'MUNDUR (-3)',
+                instruction: 'DEKRIPSI: Geser setiap huruf MUNDUR 3 langkah (D → A)',
+                prompt: 'VDQGL',
+                // V-3=S, D-3=A, Q-3=N, G-3=D, L-3=I -> SANDI
+                answer: 'SANDI'
+            },
+            {
+                id: 9,
+                type: 'DEKRIPSI',
+                shift: 4,
+                direction: 'MUNDUR (-4)',
+                instruction: 'DEKRIPSI: Geser setiap huruf MUNDUR 4 langkah (E → A)',
+                prompt: 'PERK',
+                // P-4=L, E-4=A, R-4=N, K-4=G -> LANG? Kita buat "LOGIK" -> P-S-K-M-O
+                // Mari pakai kata "SMART" (+4) -> W Q E V X. W-4=S, Q-4=M, E-4=A, V-4=R, X-4=T -> SMART
+                answer: 'SMART'
+            },
+            {
+                id: 10,
+                type: 'DEKRIPSI',
+                shift: 5,
+                direction: 'MUNDUR (-5)',
+                instruction: 'DEKRIPSI: Geser setiap huruf MUNDUR 5 langkah (E → Z)',
+                prompt: 'OZFWF',
+                // O-5=J, Z-5=U, F-5=A, W-5=R, F-5=A -> JUARA
+                answer: 'JUARA'
+            }
+        ];
+
+        // Memastikan soal nomor 6 & 9 memiliki ciphertext yang 100% sinkron dengan jawaban
+        QUESTIONS_BANK[5].prompt = 'JMNV';  // JMNV mundur 1 = ILMU
+        QUESTIONS_BANK[8].prompt = 'WQEVX'; // WQEVX mundur 4 = SMART
+
+        /**
+         * 2. SISTEM EFEK SUARA SINTESIS (WEB AUDIO API)
+         * Tanpa file eksternal, aman dari error jaringan.
+         */
+        class SoundFX {
+            constructor() {
+                this.enabled = true;
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playTone(freq, type, duration, vol = 0.2, slideTo = null) {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    if (slideTo) {
+                        osc.frequency.exponentialRampToValueAtTime(slideTo, this.ctx.currentTime + duration);
+                    }
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+
+            playPullWin(team) {
+                // Suara tarikan bertenaga + arpeggio naik
+                const base = team === 'RED' ? 220 : 261.63;
+                this.playTone(110, 'sawtooth', 0.25, 0.25, 55);
+                setTimeout(() => this.playTone(base, 'triangle', 0.15, 0.2), 50);
+                setTimeout(() => this.playTone(base * 1.25, 'triangle', 0.15, 0.2), 120);
+                setTimeout(() => this.playTone(base * 1.5, 'square', 0.25, 0.18), 190);
+            }
+
+            playWrong() {
+                this.playTone(150, 'sawtooth', 0.22, 0.18, 90);
+            }
+
+            playTick() {
+                this.playTone(880, 'sine', 0.05, 0.08);
+            }
+
+            playVictory() {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((n, idx) => {
+                    setTimeout(() => this.playTone(n, 'square', 0.3, 0.2), idx * 120);
+                });
+            }
+        }
+
+        const sfx = new SoundFX();
+
+        /**
+         * 3. STATE UTAMA PERMAINAN
+         */
+        const GAME_STATE = {
+            status: 'MENU', // 'MENU' | 'PLAYING' | 'ROUND_TRANSITION' | 'GAMEOVER'
+            currentQuestionIndex: 0,
+            timeLeft: 60,
+            timerInterval: null,
+            roundLocked: false,
+
+            // Posisi tali dalam persentase (-40 = Menang Merah, 0 = Tengah, +40 = Menang Biru)
+            ropePosition: 0,
+            targetRopePosition: 0,
+
+            // Statistik Tim
+            redScore: 0,
+            blueScore: 0,
+            redCorrect: 0,
+            blueCorrect: 0,
+
+            // Status animasi karakter & efek
+            pullingTeam: null, // 'RED' | 'BLUE' | null
+            pullAnimTimer: 0,
+            ropeVibration: 0,
+            neonFlashTeam: null,
+            neonFlashAlpha: 0,
+            winnerTeam: null, // 'RED' | 'BLUE' | 'DRAW'
+            particles: [],
+            timeElapsed: 0
+        };
+
+        /**
+         * 4. INISIALISASI UI & REFERENSI ALFABET
+         */
+        function buildAlphabetStrips() {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            const strips = ['menu-alphabet-strip', 'game-alphabet-strip'];
+            strips.forEach(id => {
+                const container = document.getElementById(id);
+                if (!container) return;
+                container.innerHTML = '';
+                alphabet.forEach((char, index) => {
+                    const box = document.createElement('div');
+                    box.className = 'flex flex-col items-center justify-center min-w-[24px] px-1 py-0.5 rounded bg-slate-800/90 border border-slate-700';
+                    box.innerHTML = `<span>${char}</span><span class="text-[9px] text-slate-400">${index + 1}</span>`;
+                    container.appendChild(box);
+                });
+            });
+        }
+
+        /**
+         * 5. LOGIKA KONTROL PERTANDINGAN
+         */
+        function startGame() {
+            sfx.init();
+            // Reset State
+            GAME_STATE.status = 'PLAYING';
+            GAME_STATE.currentQuestionIndex = 0;
+            GAME_STATE.ropePosition = 0;
+            GAME_STATE.targetRopePosition = 0;
+            GAME_STATE.redScore = 0;
+            GAME_STATE.blueScore = 0;
+            GAME_STATE.redCorrect = 0;
+            GAME_STATE.blueCorrect = 0;
+            GAME_STATE.pullingTeam = null;
+            GAME_STATE.winnerTeam = null;
+            GAME_STATE.particles = [];
+
+            // Tampilkan layar game
+            document.getElementById('screen-menu').classList.add('hidden');
+            document.getElementById('screen-gameover').classList.add('hidden');
+            const gameScreen = document.getElementById('screen-game');
+            gameScreen.classList.remove('hidden');
+            gameScreen.classList.add('flex');
+
+            resizeCanvas();
+            updateHUD();
+            loadQuestion(0);
+        }
+
+        function loadQuestion(index) {
+            if (index >= QUESTIONS_BANK.length) {
+                endGameByQuestions();
+                return;
+            }
+
+            const q = QUESTIONS_BANK[index];
+            GAME_STATE.status = 'PLAYING';
+            GAME_STATE.roundLocked = false;
+            GAME_STATE.timeLeft = 60;
+            GAME_STATE.pullingTeam = null;
+
+            // Update UI Soal
+            document.getElementById('hud-question-num').textContent = `${index + 1}`;
+            const badge = document.getElementById('q-type-badge');
+            if (q.type === 'ENKRIPSI') {
+                badge.textContent = `ENKRIPSI • GESER ${q.direction}`;
+                badge.className = 'px-3 py-1 rounded-lg font-arcade font-bold text-xs sm:text-sm tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/50';
+            } else {
+                badge.textContent = `DEKRIPSI • GESER ${q.direction}`;
+                badge.className = 'px-3 py-1 rounded-lg font-arcade font-bold text-xs sm:text-sm tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/50';
+            }
+
+            document.getElementById('q-instruction').textContent = q.instruction;
+            document.getElementById('q-cipher-word').textContent = q.prompt;
+
+            // Reset Input Kedua Tim (Aktif Bersamaan)
+            const inputRed = document.getElementById('input-red');
+            const inputBlue = document.getElementById('input-blue');
+            const btnRed = document.getElementById('btn-submit-red');
+            const btnBlue = document.getElementById('btn-submit-blue');
+
+            inputRed.value = '';
+            inputBlue.value = '';
+            inputRed.disabled = false;
+            inputBlue.disabled = false;
+            btnRed.disabled = false;
+            btnBlue.disabled = false;
+
+            document.getElementById('feedback-red').textContent = '';
+            document.getElementById('feedback-blue').textContent = '';
+            document.getElementById('status-red').textContent = 'SIAP MENJAWAB';
+            document.getElementById('status-blue').textContent = 'SIAP MENJAWAB';
+            document.getElementById('round-banner').classList.add('hidden');
+
+            // Jalankan Timer 60 Detik
+            clearInterval(GAME_STATE.timerInterval);
+            updateTimerDisplay();
+            GAME_STATE.timerInterval = setInterval(() => {
+                if (GAME_STATE.status !== 'PLAYING') return;
+                GAME_STATE.timeLeft--;
+                updateTimerDisplay();
+
+                if (GAME_STATE.timeLeft <= 10 && GAME_STATE.timeLeft > 0) {
+                    sfx.playTick();
+                }
+
+                if (GAME_STATE.timeLeft <= 0) {
+                    clearInterval(GAME_STATE.timerInterval);
+                    handleRoundTimeout();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const timerEl = document.getElementById('hud-timer');
+            timerEl.textContent = GAME_STATE.timeLeft;
+            if (GAME_STATE.timeLeft <= 10) {
+                timerEl.className = 'font-arcade font-black text-base sm:text-lg text-[#ff2a55] animate-pulse';
+            } else {
+                timerEl.className = 'font-arcade font-black text-base sm:text-lg text-emerald-400';
+            }
+        }
+
+        /**
+         * Validasi Jawaban Tim secara Real-Time (Independen)
+         */
+        function handleTeamSubmit(team) {
+            if (GAME_STATE.status !== 'PLAYING' || GAME_STATE.roundLocked) return;
+
+            const isRed = team === 'RED';
+            const inputEl = document.getElementById(isRed ? 'input-red' : 'input-blue');
+            const panelEl = document.getElementById(isRed ? 'panel-red' : 'panel-blue');
+            const feedbackEl = document.getElementById(isRed ? 'feedback-red' : 'feedback-blue');
+
+            const userAnswer = inputEl.value.trim().toUpperCase().replace(/[^A-Z]/g, '');
+            const currentQ = QUESTIONS_BANK[GAME_STATE.currentQuestionIndex];
+
+            if (!userAnswer) {
+                feedbackEl.textContent = 'Masukkan jawaban huruf A-Z!';
+                return;
+            }
+
+            // Cek Kebenaran Jawaban
+            if (userAnswer === currentQ.answer) {
+                // KUNCI RONDE AGAR TIM LAIN TIDAK BISA MENJAWAB ULANG SOAL YANG SAMA
+                GAME_STATE.roundLocked = true;
+                GAME_STATE.status = 'ROUND_TRANSITION';
+                clearInterval(GAME_STATE.timerInterval);
+
+                // Nonaktifkan input sementara selama animasi tarikan
+                document.getElementById('input-red').disabled = true;
+                document.getElementById('input-blue').disabled = true;
+                document.getElementById('btn-submit-red').disabled = true;
+                document.getElementById('btn-submit-blue').disabled = true;
+
+                sfx.playPullWin(team);
+
+                // Update Skor & Geser Tali 10%
+                if (isRed) {
+                    GAME_STATE.redScore++;
+                    GAME_STATE.redCorrect++;
+                    GAME_STATE.targetRopePosition = Math.max(-40, GAME_STATE.targetRopePosition - 10);
+                    document.getElementById('status-red').textContent = 'TERCEPAT & BENAR! (+1)';
+                    document.getElementById('status-blue').textContent = 'TERTARIK!';
+                } else {
+                    GAME_STATE.blueScore++;
+                    GAME_STATE.blueCorrect++;
+                    GAME_STATE.targetRopePosition = Math.min(40, GAME_STATE.targetRopePosition + 10);
+                    document.getElementById('status-blue').textContent = 'TERCEPAT & BENAR! (+1)';
+                    document.getElementById('status-red').textContent = 'TERTARIK!';
+                }
+
+                // Efek Visual Animasi Tarikan, Getaran, Neon & Debu Aspal
+                GAME_STATE.pullingTeam = team;
+                GAME_STATE.pullAnimTimer = 1.8;
+                GAME_STATE.ropeVibration = 1.0;
+                GAME_STATE.neonFlashTeam = team;
+                GAME_STATE.neonFlashAlpha = 0.85;
+                spawnDustParticles(team);
+
+                panelEl.classList.add('animate-win-pulse');
+                setTimeout(() => panelEl.classList.remove('animate-win-pulse'), 450);
+
+                updateHUD();
+
+                // Tampilkan Banner Hasil Ronde
+                const banner = document.getElementById('round-banner');
+                const bannerBadge = document.getElementById('banner-badge');
+                const bannerTitle = document.getElementById('banner-title');
+                const bannerSub = document.getElementById('banner-subtitle');
+
+                bannerBadge.textContent = isRed ? 'RED STREET FIGHTERS MENARIK!' : 'BLUE STREET FIGHTERS MENARIK!';
+                bannerBadge.className = isRed 
+                    ? 'px-4 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-2 bg-[#ff2a55] text-white shadow-[0_0_15px_#ff2a55]'
+                    : 'px-4 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-2 bg-[#00d2ff] text-black shadow-[0_0_15px_#00d2ff]';
+                bannerTitle.textContent = isRed ? 'TIM MERAH +1 TARIKAN!' : 'TIM BIRU +1 TARIKAN!';
+                bannerSub.innerHTML = `Kunci Jawaban: <span class="font-mono font-bold text-amber-300 text-lg">${currentQ.answer}</span>`;
+                banner.classList.remove('hidden');
+
+                // Cek Apakah Sudah Mencapai Batas Kemenangan 40%
+                setTimeout(() => {
+                    if (GAME_STATE.targetRopePosition <= -40) {
+                        finishGame('RED', 'Tim Merah berhasil menarik tali hingga garis batas kemenangan -40%!');
+                    } else if (GAME_STATE.targetRopePosition >= 40) {
+                        finishGame('BLUE', 'Tim Biru berhasil menarik tali hingga garis batas kemenangan +40%!');
+                    } else {
+                        GAME_STATE.currentQuestionIndex++;
+                        loadQuestion(GAME_STATE.currentQuestionIndex);
+                    }
+                }, 2200);
+
+            } else {
+                // Jawaban Salah: Beri efek getar & feedback tanpa menghentikan tim lawan
+                sfx.playWrong();
+                feedbackEl.textContent = `❌ "${userAnswer}" salah! Coba lagi!`;
+                panelEl.classList.remove('animate-shake');
+                void panelEl.offsetWidth; // trigger reflow
+                panelEl.classList.add('animate-shake');
+                inputEl.select();
+            }
+        }
+
+        function handleRoundTimeout() {
+            GAME_STATE.roundLocked = true;
+            GAME_STATE.status = 'ROUND_TRANSITION';
+            const currentQ = QUESTIONS_BANK[GAME_STATE.currentQuestionIndex];
+
+            document.getElementById('input-red').disabled = true;
+            document.getElementById('input-blue').disabled = true;
+            document.getElementById('btn-submit-red').disabled = true;
+            document.getElementById('btn-submit-blue').disabled = true;
+
+            const banner = document.getElementById('round-banner');
+            document.getElementById('banner-badge').textContent = 'WAKTU HABIS!';
+            document.getElementById('banner-badge').className = 'px-4 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-2 bg-slate-600 text-white';
+            document.getElementById('banner-title').textContent = 'TIDAK ADA TARIKAN';
+            document.getElementById('banner-subtitle').innerHTML = `Jawaban yang benar: <span class="font-mono font-bold text-amber-300 text-lg">${currentQ.answer}</span>`;
+            banner.classList.remove('hidden');
+
+            setTimeout(() => {
+                GAME_STATE.currentQuestionIndex++;
+                loadQuestion(GAME_STATE.currentQuestionIndex);
+            }, 2200);
+        }
+
+        function endGameByQuestions() {
+            if (GAME_STATE.targetRopePosition < 0) {
+                finishGame('RED', `Unggul posisi tali ${Math.abs(GAME_STATE.targetRopePosition)}% ke arah Tim Merah setelah 10 soal!`);
+            } else if (GAME_STATE.targetRopePosition > 0) {
+                finishGame('BLUE', `Unggul posisi tali ${Math.abs(GAME_STATE.targetRopePosition)}% ke arah Tim Biru setelah 10 soal!`);
+            } else {
+                finishGame('DRAW', 'Kedua tim memiliki kekuatan seimbang tepat di titik tengah (0%) setelah 10 soal!');
+            }
+        }
+
+        function finishGame(winner, reason) {
+            GAME_STATE.status = 'GAMEOVER';
+            GAME_STATE.winnerTeam = winner;
+            clearInterval(GAME_STATE.timerInterval);
+            sfx.playVictory();
+
+            document.getElementById('round-banner').classList.add('hidden');
+
+            const titleEl = document.getElementById('winner-title');
+            const topBar = document.getElementById('gameover-top-bar');
+
+            if (winner === 'RED') {
+                titleEl.textContent = '🏆 TIM MERAH MENANG!';
+                titleEl.className = 'font-arcade text-3xl sm:text-5xl font-black uppercase tracking-wide mb-2 text-[#ff2a55] text-glow-red';
+                topBar.className = 'absolute top-0 left-0 right-0 h-2 bg-[#ff2a55]';
+            } else if (winner === 'BLUE') {
+                titleEl.textContent = '🏆 TIM BIRU MENANG!';
+                titleEl.className = 'font-arcade text-3xl sm:text-5xl font-black uppercase tracking-wide mb-2 text-[#00d2ff] text-glow-blue';
+                topBar.className = 'absolute top-0 left-0 right-0 h-2 bg-[#00d2ff]';
+            } else {
+                titleEl.textContent = '🤝 PERTANDINGAN SERI!';
+                titleEl.className = 'font-arcade text-3xl sm:text-5xl font-black uppercase tracking-wide mb-2 text-amber-400';
+                topBar.className = 'absolute top-0 left-0 right-0 h-2 bg-amber-400';
+            }
+
+            document.getElementById('winner-reason').textContent = reason;
+            document.getElementById('end-red-pulls').textContent = GAME_STATE.redScore;
+            document.getElementById('end-red-pulls-sub').textContent = GAME_STATE.redScore;
+            document.getElementById('end-red-correct').textContent = GAME_STATE.redCorrect;
+
+            document.getElementById('end-blue-pulls').textContent = GAME_STATE.blueScore;
+            document.getElementById('end-blue-pulls-sub').textContent = GAME_STATE.blueScore;
+            document.getElementById('end-blue-correct').textContent = GAME_STATE.blueCorrect;
+
+            const posLabel = GAME_STATE.targetRopePosition === 0 
+                ? '0% (Tengah)' 
+                : (GAME_STATE.targetRopePosition < 0 ? `${Math.abs(GAME_STATE.targetRopePosition)}% ke Tim Merah` : `${GAME_STATE.targetRopePosition}% ke Tim Biru`);
+            document.getElementById('end-rope-pos').textContent = posLabel;
+
+            // Tunda sebentar agar pemain sempat melihat animasi bersorak di arena
+            setTimeout(() => {
+                document.getElementById('screen-gameover').classList.remove('hidden');
+            }, 900);
+        }
+
+        function updateHUD() {
+            document.getElementById('hud-red-score').textContent = GAME_STATE.redScore;
+            document.getElementById('hud-blue-score').textContent = GAME_STATE.blueScore;
+
+            // Konversi posisi tali (-40 s/d +40) menjadi persentase bar HUD (0% s/d 100%)
+            const barPercent = 50 + (GAME_STATE.targetRopePosition / 40) * 50;
+            document.getElementById('hud-rope-marker').style.left = `${Math.max(2, Math.min(98, barPercent))}%`;
+
+            const posText = GAME_STATE.targetRopePosition === 0
+                ? 'POSISI: 0% (TENGAH)'
+                : (GAME_STATE.targetRopePosition < 0 
+                    ? `MERAH UNGGUL ${Math.abs(GAME_STATE.targetRopePosition)}%` 
+                    : `BIRU UNGGUL ${GAME_STATE.targetRopePosition}%`);
+            document.getElementById('hud-rope-percent').textContent = posText;
+        }
+
+        /**
+         * 6. RENDERING ARENA STREET BATTLE & KARAKTER MANUSIA 2.5D (HTML5 CANVAS)
+         */
+        const canvas = document.getElementById('tugCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const wrapper = document.getElementById('arena-wrapper');
+            if (!wrapper) return;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = wrapper.clientWidth * dpr;
+            canvas.height = wrapper.clientHeight * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function spawnDustParticles(pullingTeam) {
+            const w = canvas.width / (window.devicePixelRatio || 1);
+            const h = canvas.height / (window.devicePixelRatio || 1);
+            const groundY = h * 0.80;
+            const centerOffset = (GAME_STATE.targetRopePosition / 100) * (w * 0.75);
+
+            // Munculkan partikel debu di sekitar kaki kedua tim
+            const spots = [-0.28, -0.21, -0.14, 0.14, 0.21, 0.28];
+            spots.forEach(ratio => {
+                const baseX = (w / 2) + centerOffset + (w * ratio);
+                for (let i = 0; i < 6; i++) {
+                    GAME_STATE.particles.push({
+                        x: baseX + (Math.random() - 0.5) * 30,
+                        y: groundY - Math.random() * 8,
+                        vx: (pullingTeam === 'RED' ? 1 : -1) * (1 + Math.random() * 3) + (Math.random() - 0.5) * 2,
+                        vy: -0.5 - Math.random() * 2.2,
+                        size: 4 + Math.random() * 8,
+                        alpha: 0.75,
+                        color: pullingTeam === 'RED' ? 'rgba(255, 180, 190,' : 'rgba(180, 235, 255,'
+                    });
+                }
+            });
+        }
+
+        /**
+         * Menggambar Latar Belakang Jalanan Kota Malam, Grafiti, Lampu Neon & Aspal
+         */
+        function drawArenaBackground(w, h) {
+            const groundY = h * 0.80;
+
+            // 1. Langit Malam Kota
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, groundY);
+            skyGrad.addColorStop(0, '#070913');
+            skyGrad.addColorStop(0.6, '#12172b');
+            skyGrad.addColorStop(1, '#1c192e');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, w, groundY);
+
+            // 2. Siluet Gedung Kota & Jendela Bercahaya di Kejauhan
+            const buildings = [
+                { x: 0.02, w: 0.11, h: 0.45 },
+                { x: 0.14, w: 0.09, h: 0.35 },
+                { x: 0.25, w: 0.13, h: 0.52 },
+                { x: 0.42, w: 0.16, h: 0.40 },
+                { x: 0.62, w: 0.12, h: 0.50 },
+                { x: 0.76, w: 0.10, h: 0.38 },
+                { x: 0.87, w: 0.12, h: 0.48 }
+            ];
+
+            buildings.forEach((b, i) => {
+                const bx = b.x * w;
+                const bw = b.w * w;
+                const bh = b.h * h;
+                const by = groundY - bh;
+
+                ctx.fillStyle = '#0c101d';
+                ctx.fillRect(bx, by, bw, bh);
+
+                // Cahaya tepi gedung (Merah di kiri, Biru di kanan)
+                ctx.fillStyle = i < 3 ? 'rgba(255, 42, 85, 0.25)' : (i > 3 ? 'rgba(0, 210, 255, 0.25)' : 'rgba(168, 85, 247, 0.2)');
+                ctx.fillRect(bx, by, 2, bh);
+
+                // Jendela kecil
+                ctx.fillStyle = 'rgba(255, 230, 150, 0.14)';
+                for (let wy = by + 12; wy < groundY - 35; wy += 16) {
+                    for (let wx = bx + 8; wx < bx + bw - 10; wx += 14) {
+                        if ((wx + wy) % 3 === 0) {
+                            ctx.fillRect(wx, wy, 6, 8);
+                        }
+                    }
+                }
+            });
+
+            // 3. Dinding Beton Grafiti Street Battle di Belakang Arena
+            const wallTop = groundY - h * 0.24;
+            const wallGrad = ctx.createLinearGradient(0, wallTop, 0, groundY);
+            wallGrad.addColorStop(0, '#181c2c');
+            wallGrad.addColorStop(1, '#10131f');
+            ctx.fillStyle = wallGrad;
+            ctx.fillRect(0, wallTop, w, groundY - wallTop);
+
+            // Garis atas tembok & Tabung Neon Horizontal
+            ctx.fillStyle = '#282f47';
+            ctx.fillRect(0, wallTop, w, 4);
+
+            // Tabung Neon Merah (Kiri)
+            ctx.save();
+            ctx.shadowColor = '#ff2a55';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#ff2a55';
+            ctx.fillRect(w * 0.04, wallTop + 14, w * 0.36, 4);
+            ctx.restore();
+
+            // Tabung Neon Biru (Kanan)
+            ctx.save();
+            ctx.shadowColor = '#00d2ff';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#00d2ff';
+            ctx.fillRect(w * 0.60, wallTop + 14, w * 0.36, 4);
+            ctx.restore();
+
+            // Tulisan Grafiti Artistik pada Dinding
+            ctx.save();
+            ctx.font = `900 ${Math.max(16, w * 0.032)}px Orbitron, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(255, 42, 85, 0.16)';
+            ctx.fillText('CIPHER', w * 0.22, wallTop + (groundY - wallTop) * 0.65);
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.fillText('VS', w * 0.50, wallTop + (groundY - wallTop) * 0.65);
+
+            ctx.fillStyle = 'rgba(0, 210, 255, 0.16)';
+            ctx.fillText('BATTLE', w * 0.78, wallTop + (groundY - wallTop) * 0.65);
+            ctx.restore();
+
+            // 4. Permukaan Aspal Jalanan Malam
+            const roadGrad = ctx.createLinearGradient(0, groundY, 0, h);
+            roadGrad.addColorStop(0, '#191d29');
+            roadGrad.addColorStop(0.3, '#12151f');
+            roadGrad.addColorStop(1, '#090b10');
+            ctx.fillStyle = roadGrad;
+            ctx.fillRect(0, groundY, w, h - groundY);
+
+            // Pantulan cahaya neon di aspal
+            const redReflect = ctx.createRadialGradient(w * 0.25, groundY + 15, 5, w * 0.25, groundY + 15, w * 0.25);
+            redReflect.addColorStop(0, 'rgba(255, 42, 85, 0.22)');
+            redReflect.addColorStop(1, 'transparent');
+            ctx.fillStyle = redReflect;
+            ctx.fillRect(0, groundY, w * 0.5, h - groundY);
+
+            const blueReflect = ctx.createRadialGradient(w * 0.75, groundY + 15, 5, w * 0.75, groundY + 15, w * 0.25);
+            blueReflect.addColorStop(0, 'rgba(0, 210, 255, 0.22)');
+            blueReflect.addColorStop(1, 'transparent');
+            ctx.fillStyle = blueReflect;
+            ctx.fillRect(w * 0.5, groundY, w * 0.5, h - groundY);
+
+            // 5. Garis Tengah & Garis Batas Kemenangan (-40% & +40%)
+            const centerX = w / 2;
+            const maxShiftPx = w * 0.30; // Representasi 40% pada arena visual
+            const redWinLineX = centerX - maxShiftPx;
+            const blueWinLineX = centerX + maxShiftPx;
+
+            // Garis Tengah (Putih Putus-putus)
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 6]);
+            ctx.beginPath();
+            ctx.moveTo(centerX, groundY - 12);
+            ctx.lineTo(centerX, h);
+            ctx.stroke();
+            ctx.restore();
+
+            // Garis Batas Kemenangan Tim Merah (Kiri)
+            drawWinLine(redWinLineX, groundY, h, '#ff2a55', 'BATAS MENANG MERAH');
+
+            // Garis Batas Kemenangan Tim Biru (Kanan)
+            drawWinLine(blueWinLineX, groundY, h, '#00d2ff', 'BATAS MENANG BIRU');
+
+            // 6. Efek Kilatan Neon Layar saat Tim Mendapat Poin
+            if (GAME_STATE.neonFlashAlpha > 0.01) {
+                ctx.save();
+                ctx.fillStyle = GAME_STATE.neonFlashTeam === 'RED'
+                    ? `rgba(255, 42, 85, ${GAME_STATE.neonFlashAlpha * 0.28})`
+                    : `rgba(0, 210, 255, ${GAME_STATE.neonFlashAlpha * 0.28})`;
+                ctx.fillRect(0, 0, w, h);
+                ctx.restore();
+                GAME_STATE.neonFlashAlpha *= 0.92;
+            }
+        }
+
+        function drawWinLine(x, groundY, h, color, label) {
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 12;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(x, groundY - 18);
+            ctx.lineTo(x, h);
+            ctx.stroke();
+
+            // Tiang Penanda Kecil di Tepi Jalan
+            ctx.fillStyle = color;
+            ctx.fillRect(x - 3, groundY - 26, 6, 26);
+
+            ctx.font = 'bold 9px Chakra Petch, sans-serif';
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, groundY - 31);
+            ctx.restore();
+        }
+
+        /**
+         * Menggambar Karakter Manusia Street Racer (2.5D Shaded)
+         * Memakai Hoodie, Celana Cargo, Sepatu Sneakers, Pose Condong Menarik Tali
+         */
+        function drawStreetFighterHuman(options) {
+            const {
+                x, y, scale, team, index,
+                isPulling, isPulled, isWinner, ropeHandY, time
+            } = options;
+
+            const isRed = team === 'RED';
+            const dir = isRed ? -1 : 1; // Arah condong badan saat menarik (-1 = condong ke kiri, +1 = condong ke kanan)
+
+            // Warna Pakaian Streetwear
+            const hoodieMain = isRed ? '#e11d48' : '#0284c7';
+            const hoodieHighlight = isRed ? '#fb7185' : '#38bdf8';
+            const hoodieDark = isRed ? '#881337' : '#075985';
+            const cargoColor = '#1e222d';
+            const cargoPocket = '#2a3040';
+            const sneakerColor = isRed ? '#ff2a55' : '#00d2ff';
+            const skinColor = index === 1 ? '#d99b72' : (index === 2 ? '#c6865c' : '#e5b08a');
+
+            // Animasi Gerakan Tubuh
+            const breath = Math.sin(time * 5 + index) * 1.5;
+            const heave = isPulling ? Math.sin(time * 22) * 4 : (isPulled ? Math.sin(time * 28) * 3 : 0);
+            const cheerJump = isWinner ? Math.abs(Math.sin(time * 8 + index)) * -18 : 0;
+
+            // Sudut condong tubuh ke belakang (ke arah tim masing-masing)
+            let leanAngle = dir * 0.34; // Pose standar menarik tali dengan kuat
+            if (isPulling) leanAngle = dir * 0.48; // Condong lebih dalam saat menarik!
+            if (isPulled) leanAngle = -dir * 0.12; // Tertarik ke arah tengah
+            if (isWinner) leanAngle = 0; // Tegak bersorak
+
+            ctx.save();
+            ctx.translate(x + heave, y + cheerJump);
+            ctx.scale(scale, scale);
+
+            // Bayangan di Aspal
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+            ctx.beginPath();
+            ctx.ellipse(0, 2, 26, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Koordinat Panggul (Hip)
+            const hipX = dir * 6;
+            const hipY = -44 + breath * 0.5;
+
+            // --- 1. KAKI & CELANA CARGO + SEPATU SNEAKERS ---
+            // Kaki Belakang (Menapak kuat menahan beban)
+            const backFootX = dir * 20;
+            const backFootY = 0;
+            // Kaki Depan (Menapak maju untuk tumpuan dorong)
+            const frontFootX = -dir * 18;
+            const frontFootY = 0;
+
+            // Gambar Kaki Belakang
+            drawLegAndSneaker(ctx, hipX, hipY, backFootX, backFootY, cargoColor, cargoPocket, sneakerColor, dir);
+            // Gambar Kaki Depan
+            drawLegAndSneaker(ctx, hipX, hipY, frontFootX, frontFootY, cargoColor, cargoPocket, sneakerColor, dir);
+
+            // --- 2. TUBUH ATAS (HOODIE STREETWEAR) ---
+            ctx.save();
+            ctx.translate(hipX, hipY);
+            ctx.rotate(leanAngle);
+
+            // Torso Hoodie (Bentuk 2.5D dengan gradasi)
+            const torsoGrad = ctx.createLinearGradient(-14, -46, 14, 0);
+            torsoGrad.addColorStop(0, hoodieHighlight);
+            torsoGrad.addColorStop(0.5, hoodieMain);
+            torsoGrad.addColorStop(1, hoodieDark);
+
+            ctx.fillStyle = torsoGrad;
+            ctx.beginPath();
+            ctx.roundRect(-13, -46, 26, 48, 9);
+            ctx.fill();
+
+            // Garis Strip Hitam Streetwear pada Hoodie
+            ctx.fillStyle = '#11131a';
+            ctx.fillRect(-13, -10, 26, 10); // Karet pinggang hoodie
+            ctx.fillRect(-3, -44, 6, 34);  // Resleting / aksen tengah
+
+            // Tudung Hoodie (Hood) di belakang leher
+            ctx.fillStyle = hoodieDark;
+            ctx.beginPath();
+            ctx.arc(dir * 9, -42, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // --- 3. KEPALA & GAYA RAMBUT / TOPI STREET RACER ---
+            const headY = -56;
+            // Leher
+            ctx.fillStyle = skinColor;
+            ctx.fillRect(-4, -49, 8, 8);
+
+            // Wajah / Kepala
+            ctx.fillStyle = skinColor;
+            ctx.beginPath();
+            ctx.arc(0, headY, 11, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Ekspresi Mata Fokus menghadap ke tengah arena
+            const faceDir = -dir; // Menghadap ke arah tali/lawan
+            ctx.fillStyle = '#111';
+            ctx.fillRect(faceDir * 4, headY - 2, 3, 3);
+            // Alis tegas
+            ctx.strokeStyle = '#111';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(faceDir * 2, headY - 5);
+            ctx.lineTo(faceDir * 8, headY - 3);
+            ctx.stroke();
+
+            // Aksesoris Kepala Berbeda Tiap 3 Anggota Tim agar Unik
+            if (index === 0) {
+                // Kapten Tim: Topi Snapback Terbalik + Headband Neon
+                ctx.fillStyle = '#141722';
+                ctx.beginPath();
+                ctx.arc(0, headY - 2, 11.5, Math.PI, 0);
+                ctx.fill();
+                // Lidah topi menghadap belakang
+                ctx.fillStyle = sneakerColor;
+                ctx.fillRect(dir * 4, headY - 4, dir * 12, 3.5);
+            } else if (index === 1) {
+                // Anggota 2: Memakai Tudung Hoodie (Hood Up)
+                ctx.fillStyle = hoodieMain;
+                ctx.beginPath();
+                ctx.arc(dir * 1, headY - 1, 13, Math.PI * 0.65, Math.PI * 1.85);
+                ctx.fill();
+            } else {
+                // Anggota 3: Rambut Spike Modern + Ikat Kepala Neon
+                ctx.fillStyle = '#181b26';
+                ctx.beginPath();
+                ctx.moveTo(-10, headY - 5);
+                ctx.lineTo(-4, headY - 16);
+                ctx.lineTo(2, headY - 11);
+                ctx.lineTo(7, headY - 16);
+                ctx.lineTo(10, headY - 5);
+                ctx.fill();
+
+                ctx.fillStyle = sneakerColor;
+                ctx.fillRect(-10, headY - 6, 20, 3);
+            }
+
+            // --- 4. LENGAN & TANGAN MEMEGANG TALI TAMBANG ---
+            const shoulderX = 0;
+            const shoulderY = -38;
+
+            if (isWinner) {
+                // Pose Bersorak: Mengangkat tangan ke atas!
+                ctx.strokeStyle = hoodieMain;
+                ctx.lineWidth = 8;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(shoulderX, shoulderY);
+                ctx.lineTo(-14, -68);
+                ctx.moveTo(shoulderX, shoulderY);
+                ctx.lineTo(14, -68);
+                ctx.stroke();
+
+                // Kepalan tangan
+                ctx.fillStyle = skinColor;
+                ctx.beginPath();
+                ctx.arc(-14, -70, 4.5, 0, Math.PI * 2);
+                ctx.arc(14, -70, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Pose Menarik Tali: Kedua tangan lurus menggenggam tali tambang
+                const handTargetX = faceDir * 24;
+                const handTargetY = -28;
+
+                // Lengan Belakang
+                ctx.strokeStyle = hoodieDark;
+                ctx.lineWidth = 8;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(shoulderX + faceDir * 3, shoulderY);
+                ctx.lineTo(handTargetX + faceDir * 5, handTargetY);
+                ctx.stroke();
+
+                // Lengan Depan
+                ctx.strokeStyle = hoodieMain;
+                ctx.lineWidth = 8.5;
+                ctx.beginPath();
+                ctx.moveTo(shoulderX - faceDir * 2, shoulderY + 2);
+                ctx.lineTo(handTargetX - faceDir * 3, handTargetY);
+                ctx.stroke();
+
+                // Sarung Tangan Street Fighter menggenggam tali
+                ctx.fillStyle = '#11131a';
+                ctx.beginPath();
+                ctx.arc(handTargetX + faceDir * 5, handTargetY, 4.8, 0, Math.PI * 2);
+                ctx.arc(handTargetX - faceDir * 3, handTargetY, 4.8, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Aksen neon pada sarung tangan
+                ctx.fillStyle = sneakerColor;
+                ctx.fillRect(handTargetX - 4, handTargetY - 2, 8, 2);
+            }
+
+            ctx.restore();
+            ctx.restore();
+        }
+
+        function drawLegAndSneaker(ctx, hipX, hipY, footX, footY, cargoColor, cargoPocket, sneakerColor, dir) {
+            const kneeX = (hipX + footX) / 2 - dir * 4;
+            const kneeY = (hipY + footY) / 2;
+
+            // Celana Cargo (Paha & Betis)
+            ctx.strokeStyle = cargoColor;
+            ctx.lineWidth = 11;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(hipX, hipY);
+            ctx.lineTo(kneeX, kneeY);
+            ctx.lineTo(footX, footY - 6);
+            ctx.stroke();
+
+            // Kantong Samping Cargo
+            ctx.fillStyle = cargoPocket;
+            ctx.fillRect(kneeX - 4, kneeY - 8, 8, 9);
+
+            // Sepatu Sneakers Streetwear
+            const faceDir = -dir;
+            ctx.fillStyle = '#141720';
+            ctx.beginPath();
+            ctx.roundRect(footX - 7, footY - 8, 16, 8, 3);
+            ctx.fill();
+
+            // Sol Putih & Strip Neon Sneakers
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(footX - 7, footY - 2.5, 16, 2.5);
+            ctx.fillStyle = sneakerColor;
+            ctx.fillRect(footX - 3 + faceDir * 2, footY - 6, 8, 2);
+        }
+
+        /**
+         * Menggambar Satu Tali Tambang Besar yang Dipegang Kedua Tim + Penanda Tengah
+         */
+        function drawTugRope(w, h, ropeShiftPx) {
+            const groundY = h * 0.80;
+            const ropeBaseY = groundY - 56;
+            const centerX = (w / 2) + ropeShiftPx;
+
+            // Rentang tali dari tangan anggota paling belakang Tim Merah sampai Tim Biru
+            const leftEndX = centerX - w * 0.31;
+            const rightEndX = centerX + w * 0.31;
+
+            // Efek Getaran Tali saat Ditarik
+            const vibOffset = GAME_STATE.ropeVibration > 0.01
+                ? Math.sin(GAME_STATE.timeElapsed * 65) * 4 * GAME_STATE.ropeVibration
+                : 0;
+            if (GAME_STATE.ropeVibration > 0) {
+                GAME_STATE.ropeVibration *= 0.94;
+            }
+
+            ctx.save();
+
+            // 1. Bayangan Tali di Aspal
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.moveTo(leftEndX, groundY + 1);
+            ctx.lineTo(rightEndX, groundY + 1);
+            ctx.stroke();
+
+            // 2. Tali Tambang Utama (Tekstur Serat Tambang Emas/Cokelat Terang)
+            ctx.strokeStyle = '#855828';
+            ctx.lineWidth = 10;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(leftEndX, ropeBaseY);
+            ctx.quadraticCurveTo(centerX, ropeBaseY + vibOffset, rightEndX, ropeBaseY);
+            ctx.stroke();
+
+            // Lapisan Terang Tali
+            ctx.strokeStyle = '#d99b52';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(leftEndX, ropeBaseY - 1);
+            ctx.quadraticCurveTo(centerX, ropeBaseY - 1 + vibOffset, rightEndX, ropeBaseY - 1);
+            ctx.stroke();
+
+            // Pola Ulir / Lilitan Tali Tambang
+            ctx.strokeStyle = '#6b4218';
+            ctx.lineWidth = 2;
+            for (let rx = leftEndX + 8; rx < rightEndX - 8; rx += 10) {
+                ctx.beginPath();
+                ctx.moveTo(rx, ropeBaseY - 4 + vibOffset * 0.5);
+                ctx.lineTo(rx + 4, ropeBaseY + 4 + vibOffset * 0.5);
+                ctx.stroke();
+            }
+
+            // 3. Penanda Tengah Tali (Bendera Neon Kuning-Putih Bercahaya)
+            const flagY = ropeBaseY + vibOffset * 0.8;
+            ctx.save();
+            ctx.shadowColor = '#fbbf24';
+            ctx.shadowBlur = 15;
+
+            // Ikatan Penanda di Tali
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(centerX - 5, flagY - 7, 10, 14);
+
+            // Kain Penanda Menjuntai ke Bawah
+            ctx.beginPath();
+            ctx.moveTo(centerX - 4, flagY + 7);
+            ctx.lineTo(centerX + 4, flagY + 7);
+            ctx.lineTo(centerX + 6, flagY + 26);
+            ctx.lineTo(centerX, flagY + 21);
+            ctx.lineTo(centerX - 6, flagY + 26);
+            ctx.closePath();
+            ctx.fill();
+
+            // Label Persentase di Atas Penanda Tali
+            ctx.font = '900 11px Orbitron, sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            const posVal = Math.round(GAME_STATE.ropePosition);
+            const label = posVal === 0 ? '0%' : (posVal < 0 ? `-${Math.abs(posVal)}%` : `+${posVal}%`);
+            ctx.fillText(label, centerX, flagY - 13);
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        /**
+         * Menggambar Partikel Debu Aspal
+         */
+        function drawAndUpdateParticles() {
+            for (let i = GAME_STATE.particles.length - 1; i >= 0; i--) {
+                const p = GAME_STATE.particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.08; // gravitasi ringan
+                p.alpha -= 0.018;
+                p.size += 0.25;
+
+                if (p.alpha <= 0) {
+                    GAME_STATE.particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.fillStyle = `${p.color}${p.alpha})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        /**
+         * Label Nama Tim & Skor di Sisi Kiri dan Kanan Arena
+         */
+        function drawArenaLabels(w, h) {
+            ctx.save();
+            // Label Kiri (Tim Merah)
+            ctx.textAlign = 'left';
+            ctx.font = '900 12px Orbitron, sans-serif';
+            ctx.fillStyle = '#ff2a55';
+            ctx.fillText('RED STREET FIGHTERS', 16, 24);
+            ctx.font = '700 11px Chakra Petch, sans-serif';
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillText(`SKOR TARIKAN: ${GAME_STATE.redScore}`, 16, 40);
+
+            // Label Kanan (Tim Biru)
+            ctx.textAlign = 'right';
+            ctx.font = '900 12px Orbitron, sans-serif';
+            ctx.fillStyle = '#00d2ff';
+            ctx.fillText('BLUE STREET FIGHTERS', w - 16, 24);
+            ctx.font = '700 11px Chakra Petch, sans-serif';
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillText(`SKOR TARIKAN: ${GAME_STATE.blueScore}`, w - 16, 40);
+            ctx.restore();
+        }
+
+        /**
+         * Loop Utama Animasi 60 FPS
+         */
+        let lastFrameTime = 0;
+        function animateLoop(timestamp) {
+            const dt = (timestamp - lastFrameTime) / 1000 || 0.016;
+            lastFrameTime = timestamp;
+            GAME_STATE.timeElapsed += dt;
+
+            // Interpolasi halus pergerakan tali menuju targetRopePosition
+            GAME_STATE.ropePosition += (GAME_STATE.targetRopePosition - GAME_STATE.ropePosition) * 0.12;
+
+            if (GAME_STATE.pullAnimTimer > 0) {
+                GAME_STATE.pullAnimTimer -= dt;
+                if (GAME_STATE.pullAnimTimer <= 0) {
+                    GAME_STATE.pullingTeam = null;
+                }
+            }
+
+            const w = canvas.width / (window.devicePixelRatio || 1);
+            const h = canvas.height / (window.devicePixelRatio || 1);
+
+            if (w > 0 && h > 0) {
+                ctx.clearRect(0, 0, w, h);
+
+                // 1. Gambar Latar Belakang Arena
+                drawArenaBackground(w, h);
+
+                // Konversi posisi tali (-40 s/d +40) ke pergeseran piksel di canvas
+                const maxShiftPx = w * 0.30;
+                const ropeShiftPx = (GAME_STATE.ropePosition / 40) * maxShiftPx;
+                const groundY = h * 0.80;
+                const charScale = Math.max(0.65, Math.min(1.15, h / 340));
+
+                // 2. Gambar 3 Karakter Manusia TIM MERAH (Sisi Kiri Tali)
+                // Urutan dari belakang ke depan (index 2 paling kiri, index 0 paling dekat tengah)
+                const redOffsets = [0.13, 0.21, 0.29];
+                for (let i = 2; i >= 0; i--) {
+                    const charX = (w / 2) + ropeShiftPx - (w * redOffsets[i]);
+                    drawStreetFighterHuman({
+                        x: charX,
+                        y: groundY,
+                        scale: charScale,
+                        team: 'RED',
+                        index: i,
+                        isPulling: GAME_STATE.pullingTeam === 'RED',
+                        isPulled: GAME_STATE.pullingTeam === 'BLUE',
+                        isWinner: GAME_STATE.winnerTeam === 'RED',
+                        time: GAME_STATE.timeElapsed
+                    });
+                }
+
+                // 3. Gambar 3 Karakter Manusia TIM BIRU (Sisi Kanan Tali)
+                const blueOffsets = [0.13, 0.21, 0.29];
+                for (let i = 2; i >= 0; i--) {
+                    const charX = (w / 2) + ropeShiftPx + (w * blueOffsets[i]);
+                    drawStreetFighterHuman({
+                        x: charX,
+                        y: groundY,
+                        scale: charScale,
+                        team: 'BLUE',
+                        index: i,
+                        isPulling: GAME_STATE.pullingTeam === 'BLUE',
+                        isPulled: GAME_STATE.pullingTeam === 'RED',
+                        isWinner: GAME_STATE.winnerTeam === 'BLUE',
+                        time: GAME_STATE.timeElapsed
+                    });
+                }
+
+                // 4. Gambar Tali Tambang Utama di Tangan Kedua Kelompok
+                drawTugRope(w, h, ropeShiftPx);
+
+                // 5. Gambar Partikel Debu Aspal
+                drawAndUpdateParticles();
+
+                // 6. Gambar Label Tim di Arena
+                drawArenaLabels(w, h);
+            }
+
+            requestAnimationFrame(animateLoop);
+        }
+
+        /**
+         * 7. EVENT LISTENERS INTERAKSI PENGGUNA
+         */
+        window.onload = function () {
+            buildAlphabetStrips();
+            resizeCanvas();
+            requestAnimationFrame(animateLoop);
+
+            // Tombol Mulai dari Menu
+            document.getElementById('btn-start-game').addEventListener('click', startGame);
+
+            // Tombol Main Lagi & Kembali ke Menu
+            document.getElementById('btn-play-again').addEventListener('click', startGame);
+            document.getElementById('btn-back-menu').addEventListener('click', () => {
+                clearInterval(GAME_STATE.timerInterval);
+                GAME_STATE.status = 'MENU';
+                document.getElementById('screen-gameover').classList.add('hidden');
+                document.getElementById('screen-game').classList.add('hidden');
+                document.getElementById('screen-game').classList.remove('flex');
+                document.getElementById('screen-menu').classList.remove('hidden');
+            });
+
+            // Form Submit Tim Merah (Real-Time)
+            document.getElementById('form-red').addEventListener('submit', (e) => {
+                e.preventDefault();
+                handleTeamSubmit('RED');
+            });
+
+            // Form Submit Tim Biru (Real-Time)
+            document.getElementById('form-blue').addEventListener('submit', (e) => {
+                e.preventDefault();
+                handleTeamSubmit('BLUE');
+            });
+
+            // Auto uppercase saat mengetik
+            ['input-red', 'input-blue'].forEach(id => {
+                document.getElementById(id).addEventListener('input', function () {
+                    this.value = this.value.toUpperCase();
+                });
+            });
+
+            // Toggle Bantuan Alfabet di Panel Soal
+            document.getElementById('btn-toggle-helper').addEventListener('click', () => {
+                const bar = document.getElementById('helper-alphabet-bar');
+                bar.classList.toggle('hidden');
+            });
+
+            // Toggle Audio
+            function toggleAudio() {
+                sfx.enabled = !sfx.enabled;
+                const menuBtn = document.getElementById('btn-toggle-sound-menu');
+                const hudBtn = document.getElementById('btn-sound-hud');
+                menuBtn.textContent = sfx.enabled ? '🔊 AUDIO: AKTIF' : '🔇 AUDIO: NONAKTIF';
+                hudBtn.textContent = sfx.enabled ? '🔊' : '🔇';
+            }
+
+            document.getElementById('btn-toggle-sound-menu').addEventListener('click', toggleAudio);
+            document.getElementById('btn-sound-hud').addEventListener('click', toggleAudio);
+        };
+    </script>
+</body>
+</html>
